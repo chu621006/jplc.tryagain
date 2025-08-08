@@ -66,10 +66,6 @@ else:
     st.stop()
 
 
-    if not dfs:
-        st.error("讀不到表格資料，請確認檔案內容（掃描 PDF 可能無法解析）。")
-        return
-
     # 計算學分
     stats = calculate_total_credits(dfs)
 
@@ -138,5 +134,6 @@ else:
 
 if __name__ == "__main__":
     main()
+
 
 
