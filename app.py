@@ -1,8 +1,14 @@
 import streamlit as st
 import pandas as pd
-
 from utils.docx_processing import process_docx_file
-from utils.pdf_processing import process_pdf_file
+
+PDF_ENABLED = True
+try:
+    from utils.pdf_processing import process_pdf_file
+except Exception as e:
+    PDF_ENABLED = False
+    st.warning(f"PDF 解析暫時停用：{e}")
+
 from utils.grade_analysis import calculate_total_credits
 
 # ---------- Health check：頂層快速回應 ----------
@@ -34,16 +40,20 @@ def main():
     st.divider()
 
     # 上傳（支援 DOCX / PDF）
-    uploaded = st.file_uploader("請上傳成績單（Word .docx 或 PDF）", type=["docx", "pdf"])
+    types = ["docx", "pdf"] if PDF_ENABLED else ["docx"]
+    uploaded = st.file_uploader("請上傳成績單（Word .docx 或 PDF）", type=types)
     if not uploaded:
         st.info("請先上傳檔案。")
         return
 
     name = (uploaded.name or "").lower()
-    if name.endswith(".docx"):
+    if name.endswith(".pdf"):
+    if not PDF_ENABLED:
+        st.error("目前 PDF 解析未啟用，請改上傳 DOCX。")
+        st.stop()
+    dfs = process_pdf_file(uploaded)
+    elif name.endswith(".docx"):
         dfs = process_docx_file(uploaded)
-    elif name.endswith(".pdf"):
-        dfs = process_pdf_file(uploaded)
     else:
         st.error("不支援的檔案格式。")
         return
@@ -120,3 +130,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
