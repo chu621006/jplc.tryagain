@@ -39,24 +39,32 @@ def main():
     )
     st.divider()
 
-    # 上傳（支援 DOCX / PDF）
-    types = ["docx", "pdf"] if PDF_ENABLED else ["docx"]
-    uploaded = st.file_uploader("請上傳成績單（Word .docx 或 PDF）", type=types)
-    if not uploaded:
-        st.info("請先上傳檔案。")
-        return
+# 上傳（支援 DOCX / PDF）
+types = ["docx", "pdf"] if PDF_ENABLED else ["docx"]
+uploaded = st.file_uploader("請上傳成績單（Word .docx 或 PDF）", type=types)
+if not uploaded:
+    st.info("請先上傳檔案。")
+    st.stop()
 
-    name = (uploaded.name or "").lower()
-    if name.endswith(".pdf"):
+name = (uploaded.name or "").lower()
+
+if name.endswith(".pdf"):
     if not PDF_ENABLED:
         st.error("目前 PDF 解析未啟用，請改上傳 DOCX。")
+        st.stop()  # ← 這行一定要縮排在 if 區塊裡
+    try:
+        dfs = process_pdf_file(uploaded)
+    except Exception as e:
+        st.error(f"PDF 解析失敗：{e}")
         st.stop()
-    dfs = process_pdf_file(uploaded)
-    elif name.endswith(".docx"):
-        dfs = process_docx_file(uploaded)
-    else:
-        st.error("不支援的檔案格式。")
-        return
+
+elif name.endswith(".docx"):
+    dfs = process_docx_file(uploaded)
+
+else:
+    st.error("不支援的檔案格式。")
+    st.stop()
+
 
     if not dfs:
         st.error("讀不到表格資料，請確認檔案內容（掃描 PDF 可能無法解析）。")
@@ -130,4 +138,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
