@@ -44,7 +44,6 @@ if not isinstance(stats, dict):
         }
     except Exception:
         st.error("學分統計格式不正確，請更新 utils/grade_analysis.py 至最新版。")
-        return
 
     # --- 結果（與你現在版面一致） ---
     total           = stats["total"]
@@ -72,4 +71,5 @@ if not isinstance(stats, dict):
 
 if __name__ == "__main__":
     main()
+
 
