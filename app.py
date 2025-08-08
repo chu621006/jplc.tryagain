@@ -70,25 +70,25 @@ else:
     stats = calculate_total_credits(dfs)
 
     # ---- 向下相容：舊版 grade_analysis 會回 (total, passed, failed) ----
-    if not isinstance(stats, dict):
-        try:
-            total, passed, failed = stats
-            stats = {
-                "total": total,
-                "required": 0,
-                "i_elective": 0,
-                "ii_elective": 0,
-                "other_elective": 0,
-                "passed": passed,
-                "failed": failed,
-                "passed_required": [],
-                "passed_i": [],
-                "passed_ii": [],
-                "passed_other": [],
-            }
-        except Exception:
-            st.error("學分統計格式不正確，請更新 utils/grade_analysis.py 至最新版。")
-            return
+if not isinstance(stats, dict):
+    try:
+        total, passed, failed = stats
+        stats = {
+            "total": total,
+            "required": 0,
+            "i_elective": 0,
+            "ii_elective": 0,
+            "other_elective": 0,
+            "passed": passed,
+            "failed": failed,
+            "passed_required": [],
+            "passed_i": [],
+            "passed_ii": [],
+            "passed_other": [],
+        }
+    except Exception:
+        st.error("學分統計格式不正確，請更新 utils/grade_analysis.py 至最新版。")
+        st.stop()   # ← 這裡改成 st.stop()，不要用 return
 
     # 顯示統計
     total = stats["total"]
@@ -134,6 +134,7 @@ else:
 
 if __name__ == "__main__":
     main()
+
 
 
 
