@@ -1,39 +1,47 @@
-import re
-import pandas as pd
-
-# ...（你的 normalize 與字典/分類函式維持不變）...
-
-def _pick(row: pd.Series, col: str, default=""):
+# 放在檔案前面那些 import/normalize 後面，加這個幫手
+def _find_col(df: pd.DataFrame, prefer_keywords: list[str], fallback_index: int | None = None):
     """
-    安全從 row 取一個欄位值：
-    - 若是純量，直接回傳
-    - 若是 Series（同名欄位造成），取第一個非空值
-    - 若全是空或沒有該欄位，回 default
+    在 df.columns 中尋找包含指定關鍵字的欄位（不分大小寫）。
+    找不到就用 fallback_index（若給且存在）；再找不到就回 None。
     """
-    if col in row.index:
-        v = row[col]
-        if isinstance(v, pd.Series):
-            v = v.dropna()
-            if len(v) > 0:
-                return v.astype(str).iloc[0]
-            return default
-        return v if pd.notna(v) else default
-    return default
+    cols = list(df.columns)
+    lowered = [str(c).strip().lower() for c in cols]
 
+    for i, low in enumerate(lowered):
+        if any(k in low for k in prefer_keywords):
+            return cols[i]
+
+    if fallback_index is not None:
+        # 允許只有 1 欄的情況；安全地回傳最後一欄或 None
+        if -len(cols) <= fallback_index < len(cols):
+            return cols[fallback_index]
+
+    return None
+
+
+# 這段整個覆蓋你原本的 calculate_total_credits
 def calculate_total_credits(df_list: list[pd.DataFrame]) -> dict:
     total_credits = required_credits = i_credits = ii_credits = other_credits = 0.0
     passed_all, failed_all = [], []
     passed_req, passed_i, passed_ii, passed_other = [], [], [], []
 
     for df in df_list:
-        name_col   = "科目名稱" if "科目名稱" in df.columns else ( "課程名稱" if "課程名稱" in df.columns else df.columns[0] )
-        credit_col = "學分"     if "學分"     in df.columns else ( "credit"   if "credit"   in df.columns else df.columns[-2] )
-        grade_col  = "成績"     if "成績"     in df.columns else ( "GPA"      if "GPA"      in df.columns else df.columns[-1] )
+        if df is None or df.empty or len(df.columns) == 0:
+            continue
 
+        # 1) 安全選欄位（找不到就給 None；名稱至少給第一欄）
+        name_col = _find_col(
+            df, ["科目", "課程", "名稱", "subject", "course"], fallback_index=0
+        )
+        credit_col = _find_col(df, ["學分", "credit"], fallback_index=None)
+        grade_col = _find_col(df, ["成績", "gpa", "grade"], fallback_index=None)
+
+        # 2) 逐列處理
         for _, row in df.iterrows():
-            name = _pick(row, name_col, "")
-            raw_credit = _pick(row, credit_col, 0)
-            gpa = _pick(row, grade_col, "")
+            # 取值時確保是純量；Series 取第一個非空；None 用預設
+            name = _pick(row, name_col, "") if name_col is not None else ""
+            raw_credit = _pick(row, credit_col, 0) if credit_col is not None else 0
+            gpa = _pick(row, grade_col, "") if grade_col is not None else ""
 
             try:
                 credit = float(raw_credit)
