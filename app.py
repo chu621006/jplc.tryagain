@@ -1,4 +1,12 @@
 import streamlit as st
+
+# Health check 快速回應（頂層用 st.stop()）
+params = st.query_params if hasattr(st, "query_params") else st.experimental_get_query_params()
+h = params.get("healthz")
+if h == "1" or h == ["1"]:
+    st.write("ok")
+    st.stop()
+
 import pandas as pd
 
 from utils.docx_processing import process_docx_file
@@ -72,6 +80,7 @@ if not isinstance(stats, dict):
 
 if __name__ == "__main__":
     main()
+
 
 
 
