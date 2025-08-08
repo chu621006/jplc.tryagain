@@ -1,9 +1,9 @@
 import streamlit as st
 import pandas as pd
 
-from utils.docx_processing import process_docx_file
-from utils.pdf_processing import process_pdf_file
-from utils.grade_analysis import calculate_total_credits
+from utils.docx_processing.py import process_docx_file
+from utils.pdf_processing.py import process_pdf_file
+from utils.grade_analysis.py import calculate_total_credits
 
 # ---------- Health check：頂層快速回應 ----------
 params = st.query_params if hasattr(st, "query_params") else st.experimental_get_query_params()
@@ -120,3 +120,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
